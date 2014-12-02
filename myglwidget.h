@@ -14,12 +14,26 @@ protected:
     void initializeGL();
     void paintGL();
     void resizeGL(int width, int height);
+    QVector3D figurePoint(double phi, double psi);
+    void addToMassive(QVector <QVector3D> tempPoint);
+    void countFigurePoints();
 
 private:
 
     int xRot;
     int yRot;
     int zRot;
+
+    double R;
+    double G;
+    double B;
+
+    double radius;
+    double count;
+
+    QVector <GLfloat> vertex;
+    QVector <GLfloat> normal;
+    QVector <GLuint> index;
 
 
 signals:
