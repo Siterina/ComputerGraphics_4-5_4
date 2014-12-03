@@ -17,42 +17,41 @@ protected:
     QVector3D figurePoint(double phi, double psi);
     void addToMassive(QVector <QVector3D> tempPoint, QVector3D n);
     void countFigurePoints();
+    QVector3D bottomPoint(double phi);
 
 private:
-
-    double xRot;
-    double yRot;
-    double zRot;
-
-    double xMove;
-    double yMove;
-    double zMove;
-
-    double xScale;
-    double yScale;
-    double zScale;
-
-    double xLightPos;
-    double yLightPos;
-    double zLightPos;
-
-    double xMaterialColor;
-    double yMaterialColor;
-    double zMaterialColor;
-
-    double xLightColor;
-    double yLightColor;
-    double zLightColor;
-
-    double materialShiness;
-
-    double radius;
-    double count;
 
     QVector <GLfloat> vertex;
     QVector <GLfloat> normal;
     QVector <GLuint> index;
 
+    float xRot;
+    float yRot;
+    float zRot;
+
+    float xMove;
+    float yMove;
+    float zMove;
+
+    float xScale;
+    float yScale;
+    float zScale;
+
+    float xLightPos;
+    float yLightPos;
+    float zLightPos;
+
+    float xMaterialColor;
+    float yMaterialColor;
+    float zMaterialColor;
+
+    float xLightColor;
+    float yLightColor;
+    float zLightColor;
+
+    double materialShiness;
+    double radius;
+    double count;
 
 signals:
 
@@ -81,9 +80,12 @@ public slots:
     void setYLightColor(int color);
     void setZLightColor(int color);
 
-    void setMaterialShiness(int intence);
-
+    //void setMaterialShiness(int intence);
     void setApproximation(int aCount);
+
+   // void setXMaterialIndexes(int intence);
+   // void setYMaterialIndexes(int intence);
+   // void setZMaterialIndexes(int intence);
 
 };
 

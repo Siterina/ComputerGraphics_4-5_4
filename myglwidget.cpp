@@ -9,15 +9,14 @@
 MyGLWidget::MyGLWidget(QWidget *parent) :
     QGLWidget(QGLFormat(QGL::SampleBuffers), parent)
 {
-    //R = 1, G = 1, B  = 1;
     radius = 1, count = 20;
     xRot = 0, yRot = 0, zRot = 0;
     xMove = 0, yMove = 0, zMove = 0;
     xScale = 1, yScale = 1, zScale = 1;
-    xLightPos = 0, yLightPos = 0, zLightPos = 10;
-    xMaterialColor = 0.5, yMaterialColor = 0.5, zMaterialColor = 0.1;
+    xLightPos = 2, yLightPos = 0, zLightPos = 10;
+    xMaterialColor = 1, yMaterialColor = 0.1, zMaterialColor = 1;
     xLightColor = 1, yLightColor = 1, zLightColor = 1;
-    materialShiness = 0;
+    materialShiness = 10;
 
 
 }
@@ -30,20 +29,26 @@ QVector3D MyGLWidget::figurePoint(double phi, double psi) {
     return temp;
 }
 
+QVector3D MyGLWidget::bottomPoint(double phi) {
+    QVector3D temp;
+    temp.setX(radius * cos(phi));
+    temp.setY(radius * sin(phi));
+    temp.setZ(0);
+    return temp;
+}
+
 void MyGLWidget::addToMassive(QVector <QVector3D> tempPoint, QVector3D n){
-    for(int i = 0; i < 4; i++) {
+    unsigned long long size = tempPoint.size();
+    for(unsigned long long i = 0; i < size; i++) {
         vertex.push_back(tempPoint[i].x());
         vertex.push_back(tempPoint[i].y());
         vertex.push_back(tempPoint[i].z());
-        // normal
+
         normal.push_back(n.x());
         normal.push_back(n.y());
         normal.push_back(n.z());
 
         index.push_back(index.size());
-       // qDebug() << tempPoint[i].x() << endl;
-       // qDebug() << tempPoint[i].y() << endl;
-       // qDebug() << tempPoint[i].z() << endl;
     }
 }
 
@@ -72,28 +77,51 @@ void MyGLWidget::countFigurePoints() {
          addToMassive(tempPoint, n);
          tempPoint.clear();
         }
-
     }
+    phi = pi/360;
+    QVector3D temp;
+    temp.setX(0);
+    temp.setY(0);
+    temp.setZ(0);
 
+    for(int i = 0; i < count + 1; phi += step_psi, i++) {
+        tempPoint.push_back(bottomPoint(phi));
+        tempPoint.push_back(temp);
+        tempPoint.push_back(temp);
+        tempPoint.push_back(bottomPoint(phi + step_psi));
+        n = QVector3D::normal(tempPoint[1] - tempPoint[0], tempPoint[3] - tempPoint[0]);
+        addToMassive(tempPoint, n);
+        tempPoint.clear();
+    }
 
 }
 
 void MyGLWidget::initializeGL() {
 
-    //qglClearColor(Qt::black);
     glClearColor(1, 1, 1, 1);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
     glShadeModel(GL_SMOOTH);
 
     countFigurePoints();
-    qDebug() << "true" << endl;
-
-
-
+    qDebug() << "trueInitialize" << endl;
 }
 
 void MyGLWidget::paintGL() {
+    /*
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(-10,10,-10,10,-10,10);
+
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glScalef(zm,zm,zm);
+    glPushMatrix();
+    glRotatef(-rx,1,0,0);
+    glRotatef(ry,0,1,0);
+    glRotatef(-rz,0,0,1);
+ */
 
     countFigurePoints();
     glClearColor(1, 1, 1, 1);
@@ -101,25 +129,35 @@ void MyGLWidget::paintGL() {
 
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(-1,1,-1,1,-1,1);
+    glOrtho(-2,2,-2,2,-2,2);
 
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
+    GLfloat lightPosition[4] = {xLightPos, yLightPos, zLightPos, 1.0};
+    glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
+
+    GLfloat lightColor[4]={xLightColor,yLightColor,zLightColor,1};
+    glLightfv(GL_LIGHT0,GL_DIFFUSE, lightColor);
+
+    GLfloat materialColor[]={xMaterialColor,yMaterialColor,zMaterialColor,1};
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, materialColor);
+
+    //glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, materialShiness);
+
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
-    static GLfloat lightPosition[4] = { 2, 0, 10, 1.0 };
-     glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
 
-     glRotatef(-xRot,1,0,0);
-     glRotatef(yRot,0,1,0);
-     glRotatef(-zRot,0,0,1);
+    glRotatef(-xRot,1,0,0);
+    glRotatef(yRot,0,1,0);
+    glRotatef(-zRot,0,0,1);
+    glScalef(xScale,yScale,zScale);
+    glTranslatef(xMove, yMove, zMove);
 
     glEnableClientState(GL_VERTEX_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
     glVertexPointer(3,GL_FLOAT,0,vertex.data());
     glNormalPointer(GL_FLOAT,0,normal.data());
-    qglColor(Qt::red);
 
     glDrawElements(GL_QUADS,index.size(),GL_UNSIGNED_INT,index.data());
 
@@ -155,71 +193,84 @@ void MyGLWidget::setZRotation(int angle) {
 }
 
 void MyGLWidget::moveXDirection(int shift) {
-
+    xMove = (float)shift/10;
+    updateGL();
 }
 
 void MyGLWidget::moveYDirection(int shift) {
-
+    yMove = (float)shift/10;
+    updateGL();
 }
 
 void MyGLWidget::moveZDirection(int shift) {
-
+    zMove = (float)shift/10;
+    updateGL();
 }
 
 void MyGLWidget::scaleXDirection(int scale) {
-
+    xScale = (float)scale;
+    updateGL();
 }
 
 void MyGLWidget::scaleYDirection(int scale) {
-
+    yScale = (float)scale;
+    updateGL();
 }
 
 void MyGLWidget::scaleZDirection(int scale) {
-
+    zScale = (float)scale;
+    updateGL();
 }
 
 void MyGLWidget::setXLightPos(int position) {
-
+    xLightPos = (float)position;
+    updateGL();
 }
 
 void MyGLWidget::setYLightPos(int position) {
-
+    yLightPos = (float)position;
+    updateGL();
 }
 
 void MyGLWidget::setZLightPos(int position) {
-
+    zLightPos = (float)position;
+    updateGL();
 }
 
 void MyGLWidget::setXMaterialColor(int color) {
-
+    xMaterialColor = (float)color/255;
+    updateGL();
 }
 
 void MyGLWidget::setYMaterialColor(int color) {
-
+    yMaterialColor = (float)color/255;
+    updateGL();
 }
 
 void MyGLWidget::setZMaterialColor(int color) {
-
+    zMaterialColor = (float)color/255;
+    updateGL();
 }
 
 void MyGLWidget::setXLightColor(int color) {
-
+    xLightColor = (float)color/255;
+    updateGL();
 }
 
 void MyGLWidget::setYLightColor(int color) {
-
+    yLightColor = (float)color/255;
+    updateGL();
 }
 
 void MyGLWidget::setZLightColor(int color) {
-
+    zLightColor = (float)color/255;
+    updateGL();
 }
 
-void MyGLWidget::setMaterialShiness(int intence) {
-
-}
+/*void MyGLWidget::setMaterialShiness(int intence) {
+} */
 
 void MyGLWidget::setApproximation(int aCount) {
     count = aCount;
-    qDebug() << "tu" << endl;
     updateGL();
 }
